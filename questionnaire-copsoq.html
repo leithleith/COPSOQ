@@ -9,25 +9,34 @@
     <script src="questionnaire-copsoq.js"></script>
 </head>
 <body>
+    <div id="languageSelector">
+        <div class="language-selector-content">
+            <h1 id="langSelectTitle">Choisissez votre langue / Choose your language</h1>
+            <div class="language-options">
+                <button onclick="selectLanguage('fr')">Français</button>
+                <button onclick="selectLanguage('en')">English</button>
+            </div>
+        </div>
+    </div>
     <div class="page-shell">
         <div class="left-menu">
             <button type="button" id="saveButton" onclick="saveFormToFile()" disabled>Sauvegarder</button>
-            <button type="button" onclick="document.getElementById('loadSingleInput').click()">Charger un fichier</button>
+            <button type="button" id="loadSingleBtn" onclick="document.getElementById('loadSingleInput').click()">Charger un fichier</button>
             <input type="file" id="loadSingleInput" accept=".json,application/json" style="display:none" onchange="loadSingleFormFile(event)">
-            <button type="button" onclick="document.getElementById('loadMultipleInput').click()">Charger plusieurs fichiers</button>
+            <button type="button" id="loadMultipleBtn" onclick="document.getElementById('loadMultipleInput').click()">Charger plusieurs fichiers</button>
             <input type="file" id="loadMultipleInput" accept=".json,application/json" style="display:none" multiple onchange="loadMultipleFormFiles(event)">
         </div>
         <div class="content-area">
-            <h1>Questionnaire COPSOQ</h1>
+            <h1 id="mainTitle">Questionnaire COPSOQ</h1>
             <div class="intro">
-                <p>Veuillez répondre à chaque question en sélectionnant la réponse qui correspond le mieux à votre situation.</p>
-                <p>Il n'y a pas de bonnes ou de mauvaises réponses. Répondez de manière honnête et spontanée.</p>
+                <p id="introP1">Veuillez répondre à chaque question en sélectionnant la réponse qui correspond le mieux à votre situation.</p>
+                <p id="introP2">Il n'y a pas de bonnes ou de mauvaises réponses. Répondez de manière honnête et spontanée.</p>
             </div>
             <form id="copsocForm">
             </form>
             <div id="resultsSection" class="results-section">
-                <h2>Résultats du Questionnaire COPSOQ</h2>
-                <p>Voici un aperçu graphique de votre profil ainsi que les réponses détaillées par domaine et échelle :</p>
+                <h2 id="resultsTitle">Résultats du Questionnaire COPSOQ</h2>
+                <p id="resultsDesc">Voici un aperçu graphique de votre profil ainsi que les réponses détaillées par domaine et échelle :</p>
                 <div id="overallChartContainer" class="chart-card" style="display: none;">
                     <canvas id="overallChart"></canvas>
                 </div>

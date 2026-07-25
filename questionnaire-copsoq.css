@@ -6,6 +6,41 @@ body {
     color: #333;
     background-color: #f5f7fa;
 }
+#languageSelector {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #2c3e50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.language-selector-content {
+    background-color: white;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-width: 90%;
+}
+.language-options {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+.language-options button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    background-color: #3498db;
+    border: none;
+    color: white;
+    border-radius: 8px;
+}
 .page-shell {
     max-width: 1100px;
     margin: 0 auto;
