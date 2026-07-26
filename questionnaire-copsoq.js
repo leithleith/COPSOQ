@@ -529,9 +529,9 @@ function getScoreForAnswer(item, answerIndex) {
     return Math.round(((answerIndex + 1) / totalOptions) * 100);
 }
 function getScoreColor(score) {
-    if (score < 40) return '#e74c3c';
-    if (score < 60) return '#f39c12';
-    if (score < 75) return '#f1c40f';
+    if (score <= 20) return '#e74c3c';
+    if (score <= 50) return '#f39c12';
+    if (score < 80) return '#f1c40f';
     return '#2ecc71';
 }
 function calculateMean(values) { return values.length ? Math.round(values.reduce((s, v) => s + v, 0) / values.length) : 0; }
