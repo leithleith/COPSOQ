@@ -21,6 +21,8 @@
     <div class="page-shell">
         <div class="left-menu">
             <button type="button" id="saveButton" onclick="saveFormToFile()" disabled>Sauvegarder</button>
+            <button type="button" id="resetButton" onclick="resetForm()" disabled>Réinitialiser</button>
+            <button type="button" id="randomButton" onclick="randomlyFillForm()">Remplissage aléatoire</button>
             <button type="button" id="loadSingleBtn" onclick="document.getElementById('loadSingleInput').click()">Charger un fichier</button>
             <input type="file" id="loadSingleInput" accept=".json,application/json" style="display:none" onchange="loadSingleFormFile(event)">
             <button type="button" id="loadMultipleBtn" onclick="document.getElementById('loadMultipleInput').click()">Charger plusieurs fichiers</button>

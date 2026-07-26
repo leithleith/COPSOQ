@@ -150,6 +150,8 @@ const i18n = {
         resultsTitle: "Résultats du Questionnaire COPSOQ",
         resultsDesc: "Voici un aperçu graphique de votre profil ainsi que les réponses détaillées par domaine et échelle :",
         saveBtn: "Sauvegarder",
+        resetBtn: "Réinitialiser le questionnaire",
+        randomBtn: "Remplissage aléatoire",
         loadSingleBtn: "Charger un fichier",
         loadMultipleBtn: "Charger plusieurs fichiers",
         submitBtn: "Soumettre le questionnaire",
@@ -185,6 +187,8 @@ const i18n = {
         resultsTitle: "COPSOQ Questionnaire Results",
         resultsDesc: "Here is a graphical overview of your profile along with detailed answers by domain and scale:",
         saveBtn: "Save",
+        resetBtn: "Reset the questionnaire",
+        randomBtn: "Random Fill",
         loadSingleBtn: "Load a file",
         loadMultipleBtn: "Load multiple files",
         submitBtn: "Submit the questionnaire",
@@ -240,6 +244,8 @@ function selectLanguage(lang) {
     document.getElementById('resultsTitle').textContent = t.resultsTitle;
     document.getElementById('resultsDesc').textContent = t.resultsDesc;
     document.getElementById('saveButton').textContent = t.saveBtn;
+    document.getElementById('resetButton').textContent = t.resetBtn;
+    document.getElementById('randomButton').textContent = t.randomBtn;
     document.getElementById('loadSingleBtn').textContent = t.loadSingleBtn;
     document.getElementById('loadMultipleBtn').textContent = t.loadMultipleBtn;
 
@@ -259,6 +265,8 @@ function shuffle(array) {
 function updateActionButtons() {
     const saveButton = document.getElementById('saveButton');
     if (saveButton) saveButton.disabled = !isFormComplete();
+    const resetButton = document.getElementById('resetButton');
+    if (resetButton) resetButton.disabled = !document.getElementById('copsocForm').querySelector('input:checked');
 }
 function isFormComplete() {
     const form = document.getElementById('copsocForm');
@@ -523,7 +531,7 @@ function getScoreForAnswer(item, answerIndex) {
 function getScoreColor(score) {
     if (score < 40) return '#e74c3c';
     if (score < 60) return '#f39c12';
-    if (score < 80) return '#f1c40f';
+    if (score < 75) return '#f1c40f';
     return '#2ecc71';
 }
 function calculateMean(values) { return values.length ? Math.round(values.reduce((s, v) => s + v, 0) / values.length) : 0; }
@@ -981,6 +989,25 @@ function submitForm() {
     } else {
         alert(tr().alertCompleteBeforeSubmit);
     }
+}
+
+function randomlyFillForm() {
+    const form = document.getElementById('copsocForm');
+    const questions = document.querySelectorAll('.question');
+    questions.forEach(question => {
+        const options = question.querySelectorAll('input[type="radio"]');
+        if (options.length > 0) {
+            const randomIndex = Math.floor(Math.random() * options.length);
+            options[randomIndex].checked = true;
+        }
+    });
+    updateActionButtons();
+}
+
+function resetForm() {
+    const form = document.getElementById('copsocForm');
+    form.reset();
+    updateActionButtons();
 }
 
 window.onload = generateForm;
