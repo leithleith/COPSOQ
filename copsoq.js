@@ -480,10 +480,10 @@ function getScoreForAnswer(item, answerIndex) {
     return Math.round(((answerIndex + 1) / totalOptions) * 100);
 }
 function getScoreColor(score) {
-    if (score <= 20) return '#e74c3c';
-    if (score <= 50) return '#f39c12';
-    if (score < 80) return '#f1c40f';
-    return '#2ecc71';
+    if (score <= 20) return '#D55E00';
+    if (score <= 50) return '#E69F00';
+    if (score < 80) return '#C8A500';
+    return '#009E73';
 }
 function calculateMean(values) { return values.length ? Math.round(values.reduce((s, v) => s + v, 0) / values.length) : 0; }
 function calculateMedian(values) {
@@ -901,9 +901,7 @@ function clearSunburstChart() {
 function sunburstChart(sourceAnswers) {
     const sunburstContainer = document.getElementById('myDiv');
     if (!sunburstContainer) return;
-
     let answers = [];
-
     if (Array.isArray(sourceAnswers) && sourceAnswers.length > 0) {
         answers = sourceAnswers
             .filter(item => item && Array.isArray(item.options))
@@ -931,57 +929,47 @@ function sunburstChart(sourceAnswers) {
             });
         }
     }
-
     if (!answers.length) return;
-
     const groupedByDomaine = {};
     answers.forEach(answer => {
         if (!groupedByDomaine[answer.domaine]) groupedByDomaine[answer.domaine] = {};
         if (!groupedByDomaine[answer.domaine][answer.echelle]) groupedByDomaine[answer.domaine][answer.echelle] = [];
         groupedByDomaine[answer.domaine][answer.echelle].push(answer);
     });
-
     const labels = ['*'];
     const parents = [''];
     const values = [answers.length];
     const colors = ['#95a5a6'];
     const scores = [0];
-
     const domainScores = [];
     Object.keys(groupedByDomaine).forEach(domaine => {
         const echelles = groupedByDomaine[domaine];
         const echelleNames = Object.keys(echelles);
         const echelleScores = [];
         let domaineValue = 0;
-
         echelleNames.forEach(echelle => {
             const items = echelles[echelle];
             const total = items.reduce((sum, item) => sum + getScoreForAnswer(item, item.answerIndex), 0);
             const echelleScore = Math.round(total / items.length);
             echelleScores.push(echelleScore);
             domaineValue += items.length;
-
             labels.push(echelle);
             parents.push(domaine);
             values.push(items.length);
             colors.push(getScoreColor(echelleScore));
             scores.push(echelleScore);
         });
-
         const domaineScore = Math.round(echelleScores.reduce((sum, score) => sum + score, 0) / echelleScores.length);
         domainScores.push(domaineScore);
-
         labels.push(domaine);
         parents.push('*');
         values.push(domaineValue);
         colors.push(getScoreColor(domaineScore));
         scores.push(domaineScore);
     });
-
     const copsoqScore = Math.round(domainScores.reduce((sum, score) => sum + score, 0) / domainScores.length);
     colors[0] = getScoreColor(copsoqScore);
     scores[0] = copsoqScore;
-
     const data = [{
         type: 'sunburst',
         labels,
@@ -1002,14 +990,12 @@ function sunburstChart(sourceAnswers) {
             bordercolor: colors
         }
     }];
-
     const layout = {
         margin: { l: 0, r: 0, b: 0, t: 0 },
         width: 800,
         height: 800,
         font: { size: 16 }
     };
-
     const config = {
         responsive: true,
         sendDataToCloud: false,
@@ -1022,7 +1008,6 @@ function sunburstChart(sourceAnswers) {
             scale: 1
         }
     };
-
     sunburstContainer.style.display = 'block';
     Plotly.newPlot(sunburstContainer, data, layout, config);
 }

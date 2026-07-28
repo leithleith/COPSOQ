@@ -18,6 +18,12 @@ Bibliothèque Plotly | Plotly library:
 - https://github.com/plotly/plotly.js
 - https://plotly.com/javascript/
 
-Licence MIT | MIT license
+Palette de couleurs accessible Okabe-Ito | Okabe-Ito color-blind friendly palette:
+- #009E73
+- #C8A500
+- #E69F00
+- #D55E00
+
+Licence MIT | MIT license.
 
 Creative Commons CC BY-NC-ND 4.0 (Attribution-NonCommercial-NoDerivatives 4.0 International): https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.en
