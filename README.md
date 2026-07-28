@@ -20,7 +20,7 @@ Bibliothèque Plotly | Plotly library:
 
 Palette de couleurs accessible Okabe-Ito | Okabe-Ito color-blind friendly palette:
 - #009E73
-- #C8A500
+- #F0E442
 - #E69F00
 - #D55E00
 

@@ -482,7 +482,7 @@ function getScoreForAnswer(item, answerIndex) {
 function getScoreColor(score) {
     if (score <= 20) return '#D55E00';
     if (score <= 50) return '#E69F00';
-    if (score < 80) return '#C8A500';
+    if (score < 80) return '#F0E442';
     return '#009E73';
 }
 function calculateMean(values) { return values.length ? Math.round(values.reduce((s, v) => s + v, 0) / values.length) : 0; }
