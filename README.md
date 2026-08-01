@@ -1,6 +1,6 @@
 # COPSOQ
 
-Questionnaire COPSOQ v2 en Français et v3 International avec visualisations multiples et statistiques | COPSOQ v2 questionnaire in French and COPSOQ v3 International with multiple visualizations and statistics:
+Questionnaires COPSOQ Français et international avec visualisations multiples et statistiques | French and international COPSOQ questionnaires with multiple visualizations and statistics:
 - Questionnaire en direct avec visualisations radar et sunburst | Live questionnaire with radar and sunburst charts visualization
 - Questionnaire sauvegardé unique avec visualisation radar | Single saved questionnaire with radar chart visualization
 - Questionnaires sauvegardés multiples avec visualisation radar et statistiques | Multiple saved questionnaires with radar chart visualization and statistical analysis
