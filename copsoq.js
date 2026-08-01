@@ -494,6 +494,23 @@ function calculateMedian(values) {
 }
 function calculateMin(values) { return values.length ? Math.min(...values) : 0; }
 function calculateMax(values) { return values.length ? Math.max(...values) : 0; }
+function appendStatisticsRow(tbody, label, values, className) {
+    const row = document.createElement('tr');
+    row.className = className;
+    const labelCell = document.createElement('td');
+    labelCell.textContent = label;
+    row.appendChild(labelCell);
+    [calculateMean(values), calculateMedian(values), calculateMin(values), calculateMax(values)].forEach(value => {
+        const statCell = document.createElement('td');
+        const backgroundColor = getScoreColor(value);
+        //statCell.textContent = `${value}%`;
+        statCell.style.backgroundColor = backgroundColor;
+        statCell.style.color = getContrastTextColor(backgroundColor);
+        statCell.style.fontWeight = '600';
+        row.appendChild(statCell);
+    });
+    tbody.appendChild(row);
+}
 function getContrastTextColor(backgroundColor) {
     if (!backgroundColor || typeof backgroundColor !== 'string') return '#ffffff';
     const normalizedColor = backgroundColor.replace('#', '');
@@ -609,6 +626,7 @@ function renderLoadedFilesSummary(loadedFiles) {
     const resultsContent = document.getElementById('resultsContent');
     resultsContent.innerHTML = '';
     const scaleValuesByDomain = {};
+    const questionValuesByDomain = {};
     const allDomains = new Set();
     const datasets = [];
     loadedFiles.forEach((loadedFile, fileIndex) => {
@@ -635,9 +653,17 @@ function renderLoadedFilesSummary(loadedFiles) {
         });
         for (const domaine in summary.domainScores) {
             if (!scaleValuesByDomain[domaine]) scaleValuesByDomain[domaine] = {};
+            if (!questionValuesByDomain[domaine]) questionValuesByDomain[domaine] = {};
             for (const echelle in summary.scaleStatsByDomain[domaine]) {
                 if (!scaleValuesByDomain[domaine][echelle]) scaleValuesByDomain[domaine][echelle] = [];
                 scaleValuesByDomain[domaine][echelle].push(summary.scaleStatsByDomain[domaine][echelle]);
+                if (!questionValuesByDomain[domaine][echelle]) questionValuesByDomain[domaine][echelle] = {};
+                summary.groupedByDomaine[domaine][echelle].forEach(item => {
+                    if (!questionValuesByDomain[domaine][echelle][item.question]) {
+                        questionValuesByDomain[domaine][echelle][item.question] = [];
+                    }
+                    questionValuesByDomain[domaine][echelle][item.question].push(getScoreForAnswer(item, item.answerIndex));
+                });
             }
         }
     });
@@ -666,24 +692,15 @@ function renderLoadedFilesSummary(loadedFiles) {
         table.appendChild(thead);
         const tbody = document.createElement('tbody');
         for (const echelle in scaleValuesByDomain[domaine]) {
-            const row = document.createElement('tr');
-            const values = scaleValuesByDomain[domaine][echelle];
-            const meanValue = calculateMean(values);
-            const medianValue = calculateMedian(values);
-            const minValue = calculateMin(values);
-            const maxValue = calculateMax(values);
-            const echelleCell = document.createElement('td');
-            echelleCell.textContent = echelle;
-            row.appendChild(echelleCell);
-            [meanValue, medianValue, minValue, maxValue].forEach(value => {
-                const statCell = document.createElement('td');
-                //statCell.textContent = `${value}%`;
-                statCell.style.backgroundColor = getScoreColor(value);
-                statCell.style.color = '#fff';
-                statCell.style.fontWeight = '600';
-                row.appendChild(statCell);
-            });
-            tbody.appendChild(row);
+            appendStatisticsRow(tbody, echelle, scaleValuesByDomain[domaine][echelle], 'summary-scale-row');
+            for (const question in questionValuesByDomain[domaine][echelle]) {
+                appendStatisticsRow(
+                    tbody,
+                    question,
+                    questionValuesByDomain[domaine][echelle][question],
+                    'summary-question-row'
+                );
+            }
         }
         table.appendChild(tbody);
         domainCard.appendChild(table);
@@ -881,7 +898,7 @@ function randomlyFillForm() {
     updateActionButtons();
     const submitButton = document.getElementById('submitButton');
     if (submitButton) {
-        submitButton.scrollIntoView({ behavior: 'smooth' });
+        submitButton.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 function resetForm() {
@@ -976,7 +993,7 @@ function sunburstChart(sourceAnswers) {
         parents,
         values,
         customdata: scores,
-        leaf: { opacity: 0.8 },
+        leaf: { opacity: 1 },
         marker: {
             colors,
             line: { width: 1 }

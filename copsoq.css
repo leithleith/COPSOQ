@@ -170,6 +170,15 @@ button:disabled {
     text-align: center;
     width: fit-content;
 }
+.summary-scale-row td:first-child {
+    font-weight: 700;
+    background-color: #eef3f6;
+}
+.summary-question-row td:first-child {
+    padding-left: 24px;
+    font-size: 0.92em;
+    color: #46515c;
+}
 .results-section {
     display: none;
     margin-top: 30px;
