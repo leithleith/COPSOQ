@@ -271,6 +271,18 @@ button:disabled {
 .page-footer a:hover {
     text-decoration: underline;
 }
+#overallChartContainer:fullscreen {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#myDiv:fullscreen {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 @media (max-width: 768px) {
     body {
         padding: 10px;
