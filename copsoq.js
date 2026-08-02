@@ -494,6 +494,23 @@ function calculateMedian(values) {
 }
 function calculateMin(values) { return values.length ? Math.min(...values) : 0; }
 function calculateMax(values) { return values.length ? Math.max(...values) : 0; }
+function appendStatisticsRow(tbody, label, values, className) {
+    const row = document.createElement('tr');
+    row.className = className;
+    const labelCell = document.createElement('td');
+    labelCell.textContent = label;
+    row.appendChild(labelCell);
+    [calculateMean(values), calculateMedian(values), calculateMin(values), calculateMax(values)].forEach(value => {
+        const statCell = document.createElement('td');
+        const backgroundColor = getScoreColor(value);
+        //statCell.textContent = `${value}%`;
+        statCell.style.backgroundColor = backgroundColor;
+        statCell.style.color = getContrastTextColor(backgroundColor);
+        statCell.style.fontWeight = '600';
+        row.appendChild(statCell);
+    });
+    tbody.appendChild(row);
+}
 function getContrastTextColor(backgroundColor) {
     if (!backgroundColor || typeof backgroundColor !== 'string') return '#ffffff';
     const normalizedColor = backgroundColor.replace('#', '');
@@ -506,12 +523,6 @@ function getContrastTextColor(backgroundColor) {
     const blue = parseInt(safeColor.slice(4, 6), 16);
     const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
     return luminance > 0.65 ? '#1f2937' : '#ffffff';
-}
-function getPointTooltipColor(dataset, dataIndex) {
-    if (!dataset) return '#333333';
-    const availableColors = dataset.pointBackgroundColor || dataset.borderColor || dataset.backgroundColor;
-    if (Array.isArray(availableColors)) return availableColors[dataIndex] || availableColors[0] || '#333333';
-    return availableColors || '#333333';
 }
 function buildDomainSummary(answers) {
     const groupedByDomaine = {};
@@ -609,8 +620,10 @@ function renderLoadedFilesSummary(loadedFiles) {
     const resultsContent = document.getElementById('resultsContent');
     resultsContent.innerHTML = '';
     const scaleValuesByDomain = {};
+    const questionValuesByDomain = {};
     const allDomains = new Set();
     const datasets = [];
+    const lineColors = ['#000000', '#56B4E9', '#0072B2', '#CC79A7'];
     loadedFiles.forEach((loadedFile, fileIndex) => {
         const fileAnswers = loadedFile.answers || loadedFile;
         const fileName = loadedFile.fileName || tr().fileFallback(fileIndex + 1);
@@ -631,13 +644,22 @@ function renderLoadedFilesSummary(loadedFiles) {
             pointBackgroundColor: pointColors,
             pointBorderColor: '#fff',
             pointHoverBackgroundColor: pointColors,
-            pointHoverBorderColor: '#fff'
+            pointHoverBorderColor: '#fff',
+            lineColor: lineColors[fileIndex % lineColors.length]
         });
         for (const domaine in summary.domainScores) {
             if (!scaleValuesByDomain[domaine]) scaleValuesByDomain[domaine] = {};
+            if (!questionValuesByDomain[domaine]) questionValuesByDomain[domaine] = {};
             for (const echelle in summary.scaleStatsByDomain[domaine]) {
                 if (!scaleValuesByDomain[domaine][echelle]) scaleValuesByDomain[domaine][echelle] = [];
                 scaleValuesByDomain[domaine][echelle].push(summary.scaleStatsByDomain[domaine][echelle]);
+                if (!questionValuesByDomain[domaine][echelle]) questionValuesByDomain[domaine][echelle] = {};
+                summary.groupedByDomaine[domaine][echelle].forEach(item => {
+                    if (!questionValuesByDomain[domaine][echelle][item.question]) {
+                        questionValuesByDomain[domaine][echelle][item.question] = [];
+                    }
+                    questionValuesByDomain[domaine][echelle][item.question].push(getScoreForAnswer(item, item.answerIndex));
+                });
             }
         }
     });
@@ -666,24 +688,15 @@ function renderLoadedFilesSummary(loadedFiles) {
         table.appendChild(thead);
         const tbody = document.createElement('tbody');
         for (const echelle in scaleValuesByDomain[domaine]) {
-            const row = document.createElement('tr');
-            const values = scaleValuesByDomain[domaine][echelle];
-            const meanValue = calculateMean(values);
-            const medianValue = calculateMedian(values);
-            const minValue = calculateMin(values);
-            const maxValue = calculateMax(values);
-            const echelleCell = document.createElement('td');
-            echelleCell.textContent = echelle;
-            row.appendChild(echelleCell);
-            [meanValue, medianValue, minValue, maxValue].forEach(value => {
-                const statCell = document.createElement('td');
-                //statCell.textContent = `${value}%`;
-                statCell.style.backgroundColor = getScoreColor(value);
-                statCell.style.color = '#fff';
-                statCell.style.fontWeight = '600';
-                row.appendChild(statCell);
-            });
-            tbody.appendChild(row);
+            appendStatisticsRow(tbody, echelle, scaleValuesByDomain[domaine][echelle], 'summary-scale-row');
+            for (const question in questionValuesByDomain[domaine][echelle]) {
+                appendStatisticsRow(
+                    tbody,
+                    question,
+                    questionValuesByDomain[domaine][echelle][question],
+                    'summary-question-row'
+                );
+            }
         }
         table.appendChild(tbody);
         domainCard.appendChild(table);
@@ -694,95 +707,95 @@ function renderOverallChart(labelsOrDomainScores, datasets) {
     const overallChartContainer = document.getElementById('overallChartContainer');
     overallChartContainer.style.display = 'block';
     let labels;
-    let chartDatasets;
+    let traces;
     if (Array.isArray(labelsOrDomainScores) && Array.isArray(datasets)) {
         labels = labelsOrDomainScores;
-        chartDatasets = datasets;
+        traces = datasets.map(ds => {
+            const markerColors = [...ds.pointBackgroundColor, ds.pointBackgroundColor[0]];
+            return {
+                type: 'scatterpolar',
+                r: [...ds.data, ds.data[0]],
+                theta: [...labels, labels[0]],
+                fill: 'none',
+                mode: 'lines+markers',
+                name: ds.label,
+                marker: { color: markerColors, size: 14, line: { color: '#fff', width: 1 } },
+                line: { color: ds.lineColor || 'rgba(0, 114, 178, 1)' },
+                hovertemplate: '<b>%{theta}</b><br>' + ds.label + '<extra></extra>'
+            };
+        });
     } else {
         const domainScores = labelsOrDomainScores;
         labels = Object.keys(domainScores);
         const data = labels.map(label => Math.round(domainScores[label].total / domainScores[label].count));
         const pointColors = data.map(score => getScoreColor(score));
-        chartDatasets = [{
-            label: '',
-            data,
-            fill: false,
-            backgroundColor: pointColors.map(color => `${color}40`),
-            borderColor: pointColors,
-            pointBackgroundColor: pointColors,
-            pointBorderColor: '#fff',
-            pointHoverBackgroundColor: pointColors,
-            pointHoverBorderColor: '#fff'
+        const markerColors = [...pointColors, pointColors[0]];
+        traces = [{
+            type: 'scatterpolar',
+            r: [...data, data[0]],
+            theta: [...labels, labels[0]],
+            fill: 'none',
+            mode: 'lines+markers',
+            name: '',
+            marker: { color: markerColors, size: 14, line: { color: '#fff', width: 1 } },
+            line: { color: 'rgba(0, 114, 178, 1)' },
+            hovertemplate: '<b>%{theta}</b><extra></extra>'
         }];
     }
-    const ctx = document.getElementById('overallChart');
-    if (window.overallChart && typeof window.overallChart.destroy === 'function') {
-        window.overallChart.destroy();
-    }
-    window.overallChart = new Chart(ctx, {
-        type: 'radar',
-        data: { labels, datasets: chartDatasets },
-        options: {
-            responsive: true,
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { stepSize: 20, display: false },
-                    pointLabels: { font: { size: 14 } }
-                }
+    const layout = {
+        //height: 800,
+        //width: 800,
+        polar: {
+            //domain: { x: [0.15, 0.85], y: [0.1, 0.9] },
+            radialaxis: {
+                visible: true,
+                range: [0, 100],
+                tickmode: 'linear',
+                dtick: 20,
+                showticklabels: false,
+                fixedrange: true
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    enabled: true,
-                    backgroundColor: function(context) {
-                        const point = context.tooltip && context.tooltip.dataPoints && context.tooltip.dataPoints[0];
-                        if (!point) return '#333333';
-                        return getPointTooltipColor(point.dataset, point.dataIndex);
-                    },
-                    titleColor: function(context) {
-                        const point = context.tooltip && context.tooltip.dataPoints && context.tooltip.dataPoints[0];
-                        if (!point) return '#ffffff';
-                        const color = getPointTooltipColor(point.dataset, point.dataIndex);
-                        return getContrastTextColor(color);
-                    },
-                    bodyColor: function(context) {
-                        const point = context.tooltip && context.tooltip.dataPoints && context.tooltip.dataPoints[0];
-                        if (!point) return '#ffffff';
-                        const color = getPointTooltipColor(point.dataset, point.dataIndex);
-                        return getContrastTextColor(color);
-                    },
-                    footerColor: function(context) {
-                        const point = context.tooltip && context.tooltip.dataPoints && context.tooltip.dataPoints[0];
-                        if (!point) return '#ffffff';
-                        const color = getPointTooltipColor(point.dataset, point.dataIndex);
-                        return getContrastTextColor(color);
-                    },
-                    borderColor: function(context) {
-                        const point = context.tooltip && context.tooltip.dataPoints && context.tooltip.dataPoints[0];
-                        if (!point) return '#333333';
-                        return getPointTooltipColor(point.dataset, point.dataIndex);
-                    },
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label || '';
-                            return `${label}`;
-                        },
-                        labelColor: function(context) {
-                            const dataset = context.dataset || {};
-                            const color = getPointTooltipColor(dataset, context.dataIndex);
-                            return { borderColor: color, backgroundColor: color };
-                        }
-                    }
-                }
+            angularaxis: { tickfont: { size: 14 }, fixedrange: true }
+        },
+        showlegend: false,
+        dragmode: false,
+        //margin: { l: 160, r: 160, t: 80, b: 80 }
+    };
+    const config = {
+        responsive: true,
+        sendDataToCloud: false,
+        displaylogo: false,
+        toImageButtonOptions: {
+            format: 'png',
+            filename: 'copsoq_radar-' + Date.now(),
+            //height: 1600,
+            //width: 1600,
+            scale: 1
+        },
+        modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'resetScale2d', 'toggleHover', 'toggleSpikelines', 'hoverClosestCartesian', 'hoverCompareCartesian'],
+        modeBarButtonsToAdd: [{
+            name: 'fullscreen',
+            title: 'Full screen',
+            icon: {
+                width: 500,
+                height: 500,
+                path: 'M0,0 L150,0 L150,50 L50,50 L50,150 L0,150 Z M350,0 L500,0 L500,150 L450,150 L450,50 L350,50 Z M0,350 L50,350 L50,450 L150,450 L150,500 L0,500 Z M450,350 L500,350 L500,500 L350,500 L350,450 L450,450 Z'
             },
-            elements: {
-                point: { pointRadius: 7, pointStyle: 'circle' }
+            click: function() {
+                const container = document.getElementById('overallChartContainer');
+                if (!document.fullscreenElement) {
+                    container.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+                setTimeout(() => Plotly.Plots.resize(container), 150);
             }
-        }
-    });
+        }],
+        scrollZoom: false,
+        displayModeBar: true
+    };
+    Plotly.purge(overallChartContainer);
+    Plotly.newPlot(overallChartContainer, traces, layout, config);
 }
 function displayResults() {
     const resultsContent = document.getElementById('resultsContent');
@@ -881,7 +894,7 @@ function randomlyFillForm() {
     updateActionButtons();
     const submitButton = document.getElementById('submitButton');
     if (submitButton) {
-        submitButton.scrollIntoView({ behavior: 'smooth' });
+        submitButton.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 function resetForm() {
@@ -976,7 +989,7 @@ function sunburstChart(sourceAnswers) {
         parents,
         values,
         customdata: scores,
-        leaf: { opacity: 0.8 },
+        leaf: { opacity: 1 },
         marker: {
             colors,
             line: { width: 1 }
@@ -1006,7 +1019,32 @@ function sunburstChart(sourceAnswers) {
             height: 1600,
             width: 1600,
             scale: 1
-        }
+        },
+        modeBarButtonsToAdd: [{
+            name: 'fullscreen',
+            title: 'Full screen',
+            icon: {
+                width: 500,
+                height: 500,
+                path: 'M0,0 L150,0 L150,50 L50,50 L50,150 L0,150 Z M350,0 L500,0 L500,150 L450,150 L450,50 L350,50 Z M0,350 L50,350 L50,450 L150,450 L150,500 L0,500 Z M450,350 L500,350 L500,500 L350,500 L350,450 L450,450 Z'
+            },
+            click: function() {
+                const container = document.getElementById('myDiv');
+                const onFSChange = function() {
+                    document.removeEventListener('fullscreenchange', onFSChange);
+                    Plotly.relayout(container, {
+                        width: document.fullscreenElement ? container.clientWidth : 800,
+                        height: document.fullscreenElement ? container.clientHeight : 800
+                    });
+                };
+                document.addEventListener('fullscreenchange', onFSChange);
+                if (!document.fullscreenElement) {
+                    container.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        }]
     };
     sunburstContainer.style.display = 'block';
     Plotly.newPlot(sunburstContainer, data, layout, config);
